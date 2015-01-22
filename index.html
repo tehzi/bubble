@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Анимация сортировки массива пузырьком.</title>
+    <style type="text/css">
+        * {
+            line-height:1.231;
+            font: inherit;
+            color: inherit;
+        }
+
+        html {
+            margin:0;
+            padding:0;
+            border:0;
+        }
+
+        html, body {
+            width: 100%;
+        }
+
+        body, div, span, object, iframe, h1, h2, h3, h4, h5, h6,
+        p, blockquote, pre, a, abbr, acronym, address, code, del,
+        dfn, em, img, q, dl, dt, dd, ol, ul, li, fieldset, form,
+        label, legend, table, caption, tbody, tfoot, thead, tr, th,
+        td, article, aside, dialog, figure, footer, header, hgroup,
+        nav, section {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            vertical-align: baseline;
+        }
+
+        article, aside, details, figcaption, figure, dialog, footer,
+        header, hgroup, menu, nav, section {
+            display: block;
+        }
+
+        .main {
+            width: 800px;
+            margin: 0 auto;
+        }
+
+        #canvas {
+            /*outline: 1px solid  #f00;*/
+            /*width: 800px;*/
+            /*height: 400px;*/
+        }
+
+        #log {
+            padding: 20px 0;
+        }
+
+        strong {
+            font-weight: bold;
+        }
+    </style>
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript">
+var DrawSort, draftsman;
+(function(w){
+    DrawSort = function(){
+        self = this;
+    }
+    var self;
+    var width = 0;
+    var height = 0;
+    var p = DrawSort.prototype;
+    var timerId = 0;
+    var counter = 0;
+    p.MAX = 1000;
+    p.MIN = 0;
+    p.COUNT = 100;
+    p.arraySortable = [];
+    p.time = 3;
+    p.init = function(width_src, height_src){
+        if(this.canvas instanceof CanvasRenderingContext2D) {
+            $('#canvas')[0].width = width = width_src;
+            $('#canvas')[0].height = height = height_src;
+            this.arraySortable = createArray.call(this);
+            log('<strong>Генерирую массив, числа:</strong> ' + this.arraySortable.join(', '));
+        }
+    }
+    p.draw = function(){
+        if(!(this.canvas instanceof CanvasRenderingContext2D)) {
+            return;
+        }
+        this.stop();
+        this.canvas.clearRect(0, 0, width, height);
+        for(counter = 0; counter < this.arraySortable.length; counter++) {
+            createLine.call(this, this.arraySortable[counter], counter, '#000000');
+        }
+    }
+    p.start = function(){
+        if(!(this.canvas instanceof CanvasRenderingContext2D)) {
+            return;
+        }
+        this.stop();
+        frame.call(this, this.arraySortable.length - 1, 0, 1);
+    }
+    p.stop = function(){
+        clearTimeout(timerId);
+    }
+    p.shuffle = function(){
+        this.arraySortable = createArray.call(this);
+    }
+    function createArray(){
+        var ret = [];
+        for(var i = 0; i < this.COUNT; i++) {
+            ret.push(Math.floor(Math.random() * (this.MAX - this.MIN + 1)) + this.MIN);
+        }
+        return ret;
+    }
+    function createLine(line, i, color){
+        var c = this.canvas;
+        var procent = Math.round(height / 100);
+        var distance = this.MAX - this.MIN;
+        var distance_procent = Math.round(distance / 100);
+        var ratio = procent / distance_procent;
+        c.beginPath();
+        if(color){
+            c.fillStyle = color;
+        }
+        c.rect(i * 7,
+               height - (2 + Math.round(line * ratio)),
+               2,
+               (2 + Math.round(line * ratio)));
+        c.closePath();
+        c.fill();
+    }
+    function removeLine(i){
+        var c = this.canvas;
+        var procent = Math.round(height / 100);
+        var distance = this.MAX - this.MIN;
+        var distance_procent = Math.round(distance / 100);
+        var ratio = procent / distance_procent;
+        c.clearRect(i * 7,
+                    0,
+                    2,
+                    height);
+    }
+    function log(log){
+        $('#log').html($('#log').html() + '<br /><br />' + log);
+    }
+    function frame(i_src, j_src, frame_src){
+        var temp;
+        var i = i_src;
+        var j = j_src;
+        if(i >= 1) {
+            if(j < i){
+                if(frame_src === 1){
+                    removeLine.call(self, j);
+                    removeLine.call(self, j + 1);
+                    createLine.call(self, self.arraySortable[j], j, "#ff0000");
+                    createLine.call(self, self.arraySortable[j + 1], j + 1, "#ff0000");
+                    timerId = setTimeout(function(){ frame.call(self, i, j, 2); }, this.time);
+                    return;
+                }
+                if(frame_src === 2){
+                    if(this.arraySortable[j] > this.arraySortable[j + 1]){
+                        temp = this.arraySortable[j];
+                        this.arraySortable[j] = this.arraySortable[j + 1];
+                        this.arraySortable[j + 1] = temp;
+                        removeLine.call(this, j);
+                        removeLine.call(this, j + 1);
+                        createLine.call(this, this.arraySortable[j], j, "#ff0000");
+                        createLine.call(this, this.arraySortable[j + 1], j + 1, "#ff0000");
+                        $('#log').html('');
+                        log('<strong>Генерирую массив, числа:</strong> ' + this.arraySortable.join(', '));
+                    }
+                    timerId = setTimeout(function(){ frame.call(self, i, j, 3); }, this.time);
+                    return;
+                }
+                if(frame_src === 3){
+                    removeLine.call(self, j);
+                    removeLine.call(self, j + 1);
+                    createLine.call(self, self.arraySortable[j], j, '#000000');
+                    createLine.call(self, self.arraySortable[j + 1], j + 1, '#000000');
+                    timerId = setTimeout(function(){ frame.call(self, i, ++j, 1); }, this.time);
+                    return;
+                }
+            } else {
+                timerId = setTimeout(function(){ frame.call(self, --i, 0, 1); }, this.time);
+            }
+        }
+    }
+
+    $(document).ready(function(){
+        draftsman = new DrawSort;
+        draftsman.canvas = $('#canvas')[0].getContext('2d');
+        draftsman.init(800, 400);
+        draftsman.draw();
+    })
+})(window);
+    </script>
+</head>
+<body>
+    <div class="main">
+        <canvas id="canvas">Обновите браузер</canvas>
+        <button onclick="draftsman.start();">Начать сортировку</button>
+        <button onclick="draftsman.stop();">Остановить сортировку</button>
+        <button onclick="draftsman.shuffle(); draftsman.draw();">Новый набор чисел</button>
+        <div id="log"></div>
+    </div>
+</body>
+</html>
